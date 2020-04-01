@@ -1,0 +1,3 @@
+
+sudo apt install build-essential cmake pkg-config  && sudo apt install libjpeg-dev libtiff5-dev libjasper-dev libpng12-dev && sudo apt install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev && sudo apt install libxvidcore-dev libx264-dev && sudo apt install libgtk2.0-dev libgtk-3-dev && sudo apt install libatlas-base-dev gfortran && sudo apt install python3-dev && sudo apt install python3-pip && pip3 install opencv-python && sudo apt install libqtgui4 && sudo modprobe bcm2835-v4l2 && sudo apt install libqt4-test
+pip3 install opencv-contrib-python==3.4.3.18 # this one is working

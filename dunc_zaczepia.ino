@@ -9,7 +9,7 @@ Servo konczyna;
 int CAM_WITDH_PXL_MAX = 600;
 int CAM_WITDH_PXL_MIN = 0;
 int konczynaIndex = 0;
-
+bool test = true;
 // ..............0  ,1  ,2  ,3  ,4  ,5  ,6  ,7  ,8  ,9  ,:  ,;
 int degVals[] = {
     0,   // 0
@@ -127,7 +127,7 @@ void mapIncomingIntPixelsToServoAngle()
 void ruszKonczyna()
 {
     char c = Serial.read();
-    if (c == '=')// if character = detected treat incoming value as pixels
+    if (c == '=') // if character = detected treat incoming value as pixels
     {
         return mapIncomingIntPixelsToServoAngle();
     }
@@ -146,40 +146,75 @@ void ruszKonczyna()
 
 void pauzuj()
 {
+
     char c = Serial.read();
+    int ic = c;
+    Serial.print("paramater for pause : ");
+    Serial.print(c);
+    Serial.print("->");
+    Serial.print(" ascii code: ");
+    Serial.println(ic);
+    if (ic == -1)
+    {
+        return pauzuj(); // WTH ? this is monkey patch for removing mirrored '?' sign with value of -1 trailing after p character.
+    }
     if (c == '=')
     {
         int dlugo = Serial.parseInt();
         Serial.print("Dokladne - pauzuje na tyle ms:");
         Serial.println(dlugo);
         delay(dlugo);
-
-        // todo parse int and treat it as amount of miliseconds
-        // make sure there is no mistake with limbs
-    }
-    int ii = c - 48;
-    if (ii > 11 || ii < 0)
-    {
-        Serial.print("blad nie ma wartosci pauzy dla ");
-        Serial.println(ii);
         Serial.flush();
         return;
+        // todo parse int and treat it as amount of miliseconds
+        // make sure there is no mistake with limbs
     }
     else
     {
 
-        int dlugo = pauseVals[ii];
-        Serial.print("pauzuje na tyle ms:");
-        Serial.println(dlugo);
-        delay(dlugo);
+        int ii = ic - 48;
+        if (ii > 11 || ii < 0)
+        {
+            Serial.print("blad nie ma wartosci pauzy dla ");
+            Serial.print(c);
+            Serial.print(" -> ");
+            Serial.println(ii);
+            Serial.flush();
+            return;
+        }
+        else
+        {
+
+            int dlugo = pauseVals[ii];
+            Serial.print("pauzuje na tyle ms:");
+            Serial.println(dlugo);
+            delay(dlugo);
+        }
     }
+}
+
+void testAll()
+{
+    ROTALL(90);
+        delay(500);
+        ROTALL(80);
+        delay(500);
+        ROTALL(90);
+        delay(500);
+        ROTALL(100);
+        delay(500);
 }
 
 void loop()
 {
+    if (test == true)
+    {
+        testAll();
+    }
 
     while (Serial.available() > 0)
     {
+        test = false;
         Serial.println("wprowadzono program");
         char c = Serial.read();
         int ic = c;
@@ -191,6 +226,12 @@ void loop()
         int ii = c;
         switch (c)
         {
+        case 't':
+            Serial.println("test wszystkiego");
+            testAll();
+            finishProg();
+            return;
+            break;
         case 'l': // 0 left hand
             Serial.println("ruch lewa reka");
             konczyna = rekaL;
@@ -216,7 +257,7 @@ void loop()
             ruszKonczyna();
             break;
         case 'd': // 4 rotate obrot
-        
+
             Serial.println("ruch obrot");
             // TODO: here you could do something to prevent stall if other servos being above their extrema (limbs must be l3 to l5 in order for d to move)
             konczyna = obrot;
@@ -236,27 +277,32 @@ void loop()
             continue;
             break;
         default:
-            Serial.print("blad nie ma konczyny albo polecenia nr");
+            Serial.print("blad nie ma konczyny albo polecenia nr ");
             Serial.println(c);
-            Serial.flush();
+            finishProg();
             return;
         }
-
-        // l2r8d2p4l8r2p1l2r8p1l8r2d8p1l8r2p1l2r8p1
-        // l2 r8 d2 p4, l8 r2 p1, l2 r8 p1, l8 r2 d8 p1, l8 r2 p1, l2 r8 p1
-        // l2 r8 n2 m8 --d4 p1, l8 r2 n8 m2 p1, l2 r8 n2 m8 p1, l8 r2 n5 m5 -- d8 p1, l8 r2 n2 m2 p1, l2 r8 p1
-        // l1r8n1m8d1p0 l8r1n8m1d8p0 l1r8n1m8d1p0 l8r1n8m1d8p0 l1r8n1m8d1p0 l8r1n8m1d8p0 l1r8n1m8d1p0 l8r1n8m1d8p0
-        // test reki
-        // p:r2p9r8p9r1p3r:p3r2p9r8p9r1p3r:p3
-        // test wszystkiego
-        // l4p5l6p5 r4p5r6p5 n4p5n6p5 m4p5m6p5 d4p5d6p5
-        // l4p5l6p5 r4p5r6p5 n4p5n6p5 m4p5m6p5 d2p9d8p9
-
-        // odwraca sie i macha reka
-        // d1p: l8p1 d2p1 l2p1 d3p1 l8p1 d4p1 l2p1 d5p1 l8p1 d6p1 l2p1 d7p1 l8p1 d8p1 l2p1 d9p1 l8p1 d:p1 l2p1
-        // odwraca sie macha reka i noga  -- dziala
-        // l2d: p:p: l6 d0 l2 l6p0 l2p0 l6p0 l2p0 l6p0 l2p0 l6p0 l2p0
-        // do scenki
-        // p: l2d: p:p: l6 d0 l2 l6p0 l2p0 l6p0 l2p0 l6p0 l2p0 l6p0 l2p0 p:
     }
 }
+
+void finishProg()
+{
+    test = true;
+    Serial.flush();
+}
+// l2r8d2p4l8r2p1l2r8p1l8r2d8p1l8r2p1l2r8p1
+// l2 r8 d2 p4, l8 r2 p1, l2 r8 p1, l8 r2 d8 p1, l8 r2 p1, l2 r8 p1
+// l2 r8 n2 m8 --d4 p1, l8 r2 n8 m2 p1, l2 r8 n2 m8 p1, l8 r2 n5 m5 -- d8 p1, l8 r2 n2 m2 p1, l2 r8 p1
+// l1r8n1m8d1p0 l8r1n8m1d8p0 l1r8n1m8d1p0 l8r1n8m1d8p0 l1r8n1m8d1p0 l8r1n8m1d8p0 l1r8n1m8d1p0 l8r1n8m1d8p0
+// test reki
+// p:r2p9r8p9r1p3r:p3r2p9r8p9r1p3r:p3
+// test wszystkiego
+// l4p5l6p5 r4p5r6p5 n4p5n6p5 m4p5m6p5 d4p5d6p5
+// l4p5l6p5 r4p5r6p5 n4p5n6p5 m4p5m6p5 d2p9d8p9
+
+// odwraca sie i macha reka
+// d1p: l8p1 d2p1 l2p1 d3p1 l8p1 d4p1 l2p1 d5p1 l8p1 d6p1 l2p1 d7p1 l8p1 d8p1 l2p1 d9p1 l8p1 d:p1 l2p1
+// odwraca sie macha reka i noga  -- dziala
+// l2d: p:p: l6 d0 l2 l6p0 l2p0 l6p0 l2p0 l6p0 l2p0 l6p0 l2p0
+// do scenki
+// p: l2d: p:p: l6 d0 l2 l6p0 l2p0 l6p0 l2p0 l6p0 l2p0 l6p0 l2p0 p:
