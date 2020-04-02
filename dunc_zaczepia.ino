@@ -6,10 +6,11 @@ Servo rekaL;
 Servo rekaR;
 Servo obrot;
 Servo konczyna;
-int CAM_WITDH_PXL_MAX = 600;
+int CAM_WITDH_PXL_MAX = 400;
 int CAM_WITDH_PXL_MIN = 0;
 int konczynaIndex = 0;
-bool test = true;
+bool test = false;
+bool modetest = false;
 // ..............0  ,1  ,2  ,3  ,4  ,5  ,6  ,7  ,8  ,9  ,:  ,;
 int degVals[] = {
     0,   // 0
@@ -196,13 +197,13 @@ void pauzuj()
 void testAll()
 {
     ROTALL(90);
-        delay(500);
-        ROTALL(80);
-        delay(500);
-        ROTALL(90);
-        delay(500);
-        ROTALL(100);
-        delay(500);
+    delay(500);
+    ROTALL(80);
+    delay(500);
+    ROTALL(90);
+    delay(500);
+    ROTALL(100);
+    delay(500);
 }
 
 void loop()
@@ -214,7 +215,7 @@ void loop()
 
     while (Serial.available() > 0)
     {
-        test = false;
+        test = modetest;
         Serial.println("wprowadzono program");
         char c = Serial.read();
         int ic = c;
@@ -287,7 +288,7 @@ void loop()
 
 void finishProg()
 {
-    test = true;
+    test = modetest;
     Serial.flush();
 }
 // l2r8d2p4l8r2p1l2r8p1l8r2d8p1l8r2p1l2r8p1
