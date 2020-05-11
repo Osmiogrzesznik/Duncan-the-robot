@@ -1,9 +1,196 @@
-<html>
-  <head>
-    <title>Pi Video Surveillance</title>
-  </head>
-  <body>
-    <h1>Pi Video Surveillance</h1>
-    <img src="{{ url_for('video_feed') }}">
-  </body>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Duncan Point of View</title>
+</head>
+
+<body>
+  <h1>Duncan's Point of view</h1>
+  <!-- <img src="{{ url_for('video_feed') }}"> -->
+  <div id="vue-app">
+    <input type="text" ref="appy" tabindex="-1" @keyup="keyboardControlKeyUpEventHandler"
+      @keydown="keyboardControlKeyDownEventHandler" />
+    Say:
+    <input type="text" ref="say_inp" v-model="tosay" @keyup.enter="say" />
+    <ul class="padded">
+      <li v-for="(v,n,i) in limb_positions" :key="n">
+        v: ${ v },
+        n: ${ n },
+        i: ${ i },
+      </li>
+    </ul>
+    <div class="but">
+      <button class="keycontrol" v-for="(v,n,i) in progPerKeyDict" :key="n" @click="sendProgram(v)">
+        ${n}
+      </button>
+      <div>${response_msg}</div>
+    </div>
+  </div>
+
+  <script src="static/axios.min.js"></script>
+  <script src="static/vue.js"></script>
+  <script src="static/socket.io.min.js"></script>
+  <script>
+    v = new Vue({
+      delimiters: ['${', '}'], // to avoid clash with Jinja2 moustaches
+      el: '#vue-app',
+      data: {
+        tosay: "dsfdsfsfd",
+        socket: null,
+        REPEAT: false,
+        response_msg: "",
+        limb_positions: {
+          l: 91,
+          r: 91,
+          m: 91,
+          n: 91,
+          d: 91
+        },
+        keyboardState: {
+          a: false,
+        },
+        progPerKeyDict: {
+          // l
+          "4": "l0p0",
+          "t": "l:p0",
+          // r
+          "9": "r0p0",
+          "u": "r:p0",
+          // l + r
+          "6": "l0r0:p0",
+          "y": "l:r:p0",
+          // n
+          "a": "n0p0",
+          "v": "n:p0",
+          // m
+          ";": "m0p0",
+          "m": "m:p0",
+          // d
+          "w": "d0p0",
+          "p": "d:p0",
+          // something
+          "g": "l0p0",
+          "j": "l0p0",
+          // reset
+          "h": "s",
+        }
+      }, // end of data
+      mounted() {
+        this.$refs.appy.focus(); // focus vue element on creation
+        this.socket = io.connect(document.location.href +
+          "duncanws"); //("ws://" + document.location.hostname + document.location.port);
+        // socket = io.connect("ws://" + document.location.hostname + document.location.port + "/test");
+        this.socket.on('positions', (msg) => {
+          console.log("Received:", msg.data)
+          longStringWithPositions = msg.data;
+          this.updateFromPositionsString(longStringWithPositions)
+        })
+        this.socket.on('py rsp', (msg) => {
+          console.log("Received:", msg.data)
+          this.response_msg = msg.data;
+        })
+      },
+      methods: {
+        updateFromPositionsString(longStringWithPositions) {
+          this.response_msg = longStringWithPositions;
+          let listofStrs = longStringWithPositions.trim().split("\n"); // split incoming sting by newline
+          let ob = {}
+          listofStrs.forEach(s => {
+            // we are not interested in serial junk, just position report
+            if (s.length > 6 || s.length < 4) return;
+            /*
+          ["d:90\n","n:90\n","m:90\n","m:90\n"]
+          */
+            let letter = s[0];
+            // extract integer after colon and trim nextline char
+            let pos = parseInt(s.split(":")[1].trim());
+            this.limb_positions[letter] = pos; // i.e. ob["d"] = 90;
+          });
+        },
+        say() {
+          console.log("sending say:" + this.tosay);
+          this.socket.emit('say', {
+            data: this.tosay
+          })
+          this.tosay = "";
+        },
+        moveLimb(limb_letter) {
+
+        },
+        keyHandlerMethodName(letter) {
+          return "do_" + letter
+        },
+        keyboardControlKeyUpEventHandler(event) {
+
+          let k = event.key;
+          // let mk = this.keyHandlerMethodName(k);
+          window.eUp = event;
+          console.log("up", k)
+          this.keyboardState[k] = false;
+
+          if (this.progPerKeyDict.hasOwnProperty(k)) {
+            // this.sendProgram(this.progPerKeyDict[k]);
+            this.sendProgram(this.progPerKeyDict[k]);
+          }
+          // if (this.hasOwnProperty(mk)) {
+          //   this[mk](false);
+          // }
+        },
+        keyboardControlKeyDownEventHandler(event) {
+          // let k = event.key;
+          // let mk = this.keyHandlerMethodName(k);
+          // window.eDown = event;
+          // console.log("down", k)
+          // if (!this.keyboardState[k] || this.REPEAT) {
+
+          //   // if was never pressed(undefined) or not pressed (false)
+          //   // to avoid rpeating do_key method while key is pressed
+          //   // if (this.hasOwnProperty(mk)) {
+          //   //   this[mk](true);
+
+          //   //   /*
+          //   //   if i want to implement something like this , arduino needs to loop and keep moving the servo while key is not released
+
+          //   //   */
+          //   // }
+          // }
+          // this.keyboardState[k] = true
+          // //4t9uav;mwpgj
+        },
+        sendProgram(prg) {
+          // this will be not that simple - there are url restricted characters in my program syntax
+          this.socket.emit('program', {
+            data: prg
+          })
+        },
+
+      }, // end of methods
+    })
+  </script>
+  <style>
+    li {
+      border: 1px solid red;
+    }
+
+    .padded {
+      padding: 5px;
+      background-color: blanchedalmond;
+    }
+
+    .but {
+      padding: 5px;
+      background-color: gainsboro;
+    }
+
+    .keycontrol {
+      width: 20vw;
+      height: 20vw;
+    }
+  </style>
+
+</body>
+
 </html>

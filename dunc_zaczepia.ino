@@ -1,17 +1,40 @@
 #include <Servo.h>
-// create servo object to control a servo
+// create servo objects to control limbs
 Servo nogaL;
 Servo nogaR;
 Servo rekaL;
 Servo rekaR;
 Servo obrot;
+
+int SERVOS_COUNT = 5;
+// array conatining all servos
+Servo konczyny[] = {
+    nogaL,
+    nogaR,
+    rekaL,
+    rekaR,
+    obrot};
+// letters representing above servos in my syntax
+char konczyny_letters[] = {
+    'n',
+    'm',
+    'l',
+    'r',
+    'd',
+};
+
 Servo konczyna;
-int CAM_WITDH_PXL_MAX = 400;
-int CAM_WITDH_PXL_MIN = 0;
-int konczynaIndex = 0;
+int VERBOSITY = 1; // level to set the verbosity of serial messages
+const int DEBUGLEVEL = 1;
+int CAM_WITDH_PXL_MAX = 335; // because face is never on the edge  // was 400
+int CAM_WITDH_PXL_MIN = 65;  // was 0 . see above
+int konczynaIndex = 0;       // currently moved limb/servo index
 bool test = false;
 bool modetest = false;
+
 // ..............0  ,1  ,2  ,3  ,4  ,5  ,6  ,7  ,8  ,9  ,:  ,;
+// these values represent degree values for custom servo programming syntax
+// one character value instead of providing full degree value
 int degVals[] = {
     0,   // 0
     18,  // 1
@@ -25,7 +48,7 @@ int degVals[] = {
     162, // 9
     180  // :
 };
-
+// similarly those pause values allow to program robot with concise one-char commands
 int pauseVals[] = {
     12,   // 0
     25,   // 1
@@ -40,20 +63,8 @@ int pauseVals[] = {
     1600, // :
     3200, // ;
 };
-
-Servo konczyny[] = {
-    nogaL,
-    nogaR,
-    rekaL,
-    rekaR,
-    obrot};
-
-int prevXpxl[] = {
-    300,
-    300,
-    300,
-    300,
-    300};
+// theses arrays provide storage for previous values written to servos (redundant since (servo.read()))
+int prevXpxl[] = {300, 300, 300, 300, 300};
 int limbMaxArr[] = {
     130,
     130,
@@ -68,30 +79,58 @@ int limbMinArr[] = {
     50,
     50,
 };
+
 // servoSequencePoint updown90[] = {{0, 0}, {180, 0}}; // go to position 100 at speed of 20, position 20 speed 20, position 60, speed 50
 // servoSequencePoint updown10[] = {{80, 0}, {100, 0}};
+// encapsulating serial output to provide debug channel
+void debug(String ZXC)
+{
+    if (VERBOSITY >= DEBUGLEVEL)
+    {
+        Serial.print(ZXC);
+    }
+}
+
+void debug(int ZXC)
+{
+    if (VERBOSITY >= DEBUGLEVEL)
+    {
+        Serial.print(ZXC);
+    }
+}
+
+void debugln(int ZXC)
+{
+    if (VERBOSITY >= DEBUGLEVEL)
+    {
+        Serial.println(ZXC);
+    }
+}
+
+void debugln(const char *ZXC)
+{
+    if (VERBOSITY >= DEBUGLEVEL)
+    {
+        Serial.println(ZXC);
+    }
+}
 
 void setup()
 {
     while (!Serial)
-        ; // wait for serial port to connect. Needed for native USB port only
+        ;
     Serial.begin(9600);
-    Serial.println("\n Starting");
-    Serial.println("\n Resetting servoes to 90");
+    debugln("\n Starting");
+    debugln("\n Resetting servoes to 90");
     obrot.attach(3);
-    nogaL.attach(5);
-    nogaR.attach(6);  // attaches the servo on pin 9 to the servo object
-    rekaL.attach(10); // attaches the servo on pin 9 to the servo object
-    rekaR.attach(11); // attaches the servo on pin 9 to the servo object
+    nogaL.attach(10);
+    nogaR.attach(11);
+    rekaL.attach(5);
+    rekaR.attach(6);
     ROTALL(90);
 
-    // reka.sequencePlay(rekaxxtest,8,false,0);
-    while (!Serial)
-        ; // wait for serial port to connect. Needed for native USB port only
-
     // send an intro:
-    Serial.println("\n\nReady to accept programs:");
-    Serial.println();
+    debugln("\n\nReady to accept programs:\n");
 }
 
 void ROTALL(int pos)
@@ -103,14 +142,9 @@ void ROTALL(int pos)
     rekaR.write(pos);
 }
 
-void D(int lng)
-{
-    delay(lng);
-}
-
 void mapIncomingIntPixelsToServoAngle()
 {
-    int Xpxl = Serial.parseInt();
+    int Xpxl = Serial.parseInt();        // parse int after already parsed limb token ( "l=300")
     if (Xpxl != prevXpxl[konczynaIndex]) // only if new data is sent for this limb start moving
     {
         prevXpxl[konczynaIndex] = Xpxl;          // store new data for later comparison
@@ -119,12 +153,19 @@ void mapIncomingIntPixelsToServoAngle()
 
         int limbPos = map(Xpxl, CAM_WITDH_PXL_MAX, CAM_WITDH_PXL_MIN, limbMin, limbMax); // map pixel coordinate to corresponding servo angle
         // if mapped result exceeds extrema of servo range, cap it to extrema
-        limbPos = min(limbPos, limbMax);
-        limbPos = max(limbPos, limbMin);
+        // limbPos = min(limbPos, limbMax);
+        // limbPos = max(limbPos, limbMin);
         konczyna.write(limbPos);
     }
 }
 
+// if character specifies that following int is exact degree value
+void writeInDegrees()
+{
+    konczyna.write(Serial.parseInt());
+}
+
+//detects what method should be used to interpret limb movement command
 void ruszKonczyna()
 {
     char c = Serial.read();
@@ -132,11 +173,15 @@ void ruszKonczyna()
     {
         return mapIncomingIntPixelsToServoAngle();
     }
-    int ii = c - 48;
-    if (ii > 10 || ii < 0)
+    if (c == '$')
     {
-        Serial.print("blad nie ma wartosci stopni dla ");
-        Serial.println(ii);
+        return writeInDegrees();
+    }
+    int ii = c - 48;
+    if (ii > 10 || ii < 0) // if value symbol is not translated to index within values array 1 to :
+    {
+        debug("blad nie ma wartosci stopni dla ");
+        debugln(ii);
     }
     else
     {
@@ -144,28 +189,27 @@ void ruszKonczyna()
         konczyna.write(pos);
     }
 }
-
+// this is run if the token specyfyong pause os detected
 void pauzuj()
 {
 
     char c = Serial.read();
     int ic = c;
-    Serial.print("paramater for pause : ");
-    Serial.print(c);
-    Serial.print("->");
-    Serial.print(" ascii code: ");
-    Serial.println(ic);
+    debug("paramater for pause : ");
+    debug(c);
+    debug("->");
+    debug(" ascii code: ");
+    debugln(ic);
     if (ic == -1)
     {
-        return pauzuj(); // WTH ? this is monkey patch for removing mirrored '?' sign with value of -1 trailing after p character.
+        return pauzuj(); // WTH ? this is monkey patch for removing mirrored '?' sign with value of -1 trailing after p character. Baud rate is ok so how?
     }
-    if (c == '=')
+    if (c == '$')//exact pause character
     {
         int dlugo = Serial.parseInt();
-        Serial.print("Dokladne - pauzuje na tyle ms:");
-        Serial.println(dlugo);
+        debug("Dokladne pauzowanie - pauzuje na tyle ms:");
+        debugln(dlugo);
         delay(dlugo);
-        Serial.flush();
         return;
         // todo parse int and treat it as amount of miliseconds
         // make sure there is no mistake with limbs
@@ -176,19 +220,18 @@ void pauzuj()
         int ii = ic - 48;
         if (ii > 11 || ii < 0)
         {
-            Serial.print("blad nie ma wartosci pauzy dla ");
-            Serial.print(c);
-            Serial.print(" -> ");
-            Serial.println(ii);
-            Serial.flush();
+            debug("blad nie ma wartosci pauzy dla ");
+            debug(c);
+            debug(" -> ");
+            debugln(ii);
             return;
         }
         else
         {
 
             int dlugo = pauseVals[ii];
-            Serial.print("pauzuje na tyle ms:");
-            Serial.println(dlugo);
+            debug("pauzuje na tyle ms:");
+            debugln(dlugo);
             delay(dlugo);
         }
     }
@@ -215,71 +258,108 @@ void loop()
 
     while (Serial.available() > 0)
     {
+        delay(1); // without it there seems to be some porblem with executing commands
+        // without one milisecond delay commands are not executing as intended
         test = modetest;
-        Serial.println("wprowadzono program");
+        debugln("wprowadzono program");
         char c = Serial.read();
         int ic = c;
-        Serial.print("You entered: ");
-        Serial.print(c);
-        Serial.print("->");
-        Serial.print(" ascii code: ");
-        Serial.println(ic);
+        debug("You entered: ");
+        debug(c);
+        debug("->");
+        debug(" ascii code: ");
+        debugln(ic);
         int ii = c;
         switch (c)
         {
+        case 'v':
+            if (VERBOSITY == 1)
+            {
+                debugln("wylaczam debugging");
+                VERBOSITY = 0;
+            }
+            else if (VERBOSITY == 0)
+            {
+                VERBOSITY = 1;
+                debugln("wlaczam debugging");
+            }
+            break;
+        case 's':
+            debugln('reset all to 90');
+            ROTALL(90);
+            finishProg();
+            return;
+            break;
+        case '*':
+            debugln('these are all positions');
+            for (int idx = 0; idx < SERVOS_COUNT; idx++)
+            {
+                int pos = konczyny[idx].read();
+                char letter = konczyny_letters[idx];
+                Serial.print(letter);
+                Serial.print(":");
+                Serial.println(pos);
+            }
+            // TODO loop through servos and output positons by calling
+            // on each
+            // https://forum.arduino.cc/index.php?topic=526154.0
+
+            finishProg();
+            return;
+            break;
         case 't':
-            Serial.println("test wszystkiego");
+            debugln("test wszystkiego");
             testAll();
             finishProg();
             return;
             break;
         case 'l': // 0 left hand
-            Serial.println("ruch lewa reka");
+            debugln("ruch lewa reka");
             konczyna = rekaL;
             konczynaIndex = 0;
             ruszKonczyna();
             break;
         case 'r': // 1 right hand
-            Serial.println("ruch prawa reka ");
+            debugln("ruch prawa reka ");
             konczyna = rekaR;
             konczynaIndex = 1;
             ruszKonczyna();
             break;
         case 'n': // 2 left leg
-            Serial.println("ruch lewa noga");
+            debugln("ruch lewa noga");
             konczyna = nogaL;
             konczynaIndex = 2;
             ruszKonczyna();
             break;
         case 'm': // 3 right leg
-            Serial.println("ruch prawa noga");
+            debugln("ruch prawa noga");
             konczyna = nogaR;
             konczynaIndex = 3;
             ruszKonczyna();
             break;
         case 'd': // 4 rotate obrot
 
-            Serial.println("ruch obrot");
+            debugln("ruch obrot");
             // TODO: here you could do something to prevent stall if other servos being above their extrema (limbs must be l3 to l5 in order for d to move)
             konczyna = obrot;
             konczynaIndex = 4;
             ruszKonczyna();
             break;
         case 'p': // p pause
-            Serial.println("pauza");
+            debugln("pauza");
             pauzuj();
             continue;
             break;
         case '-':
-            Serial.println("--------------------");
+            debugln("--------------------");
         case ' ':
         case ',':
         case 10:
             continue;
             break;
         default:
-            Serial.print("blad nie ma konczyny albo polecenia nr ");
-            Serial.println(c);
+            debug("blad nie ma konczyny albo polecenia nr ");
+            debugln(c);
             finishProg();
             return;
         }
