@@ -1,3 +1,5 @@
+video of working prototype: https://youtu.be/1ie1ujZIjB8
+
 # Contents
 
 [1 Raspberry PI and connecting with Arduino
@@ -103,8 +105,8 @@ Sudo pip3 install pyserial
 
 ## Face Tracking opencv tutorial
 
-Miller, L. (2019) Face Tracking OpenCV, Python, & Arduino. *Learn
-Robotics.* 23 May. Av:
+Miller, L. (2019) Face Tracking OpenCV, Python, & Arduino. _Learn
+Robotics._ 23 May. Av:
 <https://www.learnrobotics.org/blog/face-tracking-opencv/amp/> (Acc:
 
 Large portion of my code was inspired by this post/tutorial by Miller
@@ -153,19 +155,19 @@ Followed this guidance
 However you need to take into account the post is old as well and some
 modifications are required
 
-webcam\_localhost off
+webcam_localhost off
 
 Is now
 
-stream\_localhost off
+stream_localhost off
 
 and
 
-control\_localhost off
+control_localhost off
 
 is
 
-webcontrol\_localhost off
+webcontrol_localhost off
 
 The program allows multiple cameras and separate configurations for each
 . There is a lot of additional configuration – including servo controls,
@@ -191,19 +193,19 @@ recognizer = cv2.createLBPHFaceRecognizer();
 
 \# . . .
 
-font=cv2.cv.InitFont(cv2.cv.CV\_FONT\_HERSHEY\_COMPLEX\_SMALL,5,1,0,4)
+font=cv2.cv.InitFont(cv2.cv.CV_FONT_HERSHEY_COMPLEX_SMALL,5,1,0,4)
 
 \# . . .
 
-rec.load("F:/Program Files/projects/face\_rec/faceREC/trainingdata.yml")
+rec.load("F:/Program Files/projects/face_rec/faceREC/trainingdata.yml")
 
 was changed to:
 
-recognizer = cv2.face.LBPHFaceRecognizer\_create()
+recognizer = cv2.face.LBPHFaceRecognizer_create()
 
 \# . . .
 
-font = cv2.FONT\_HERSHEY\_SIMPLEX
+font = cv2.FONT_HERSHEY_SIMPLEX
 
 \# . . .
 
@@ -233,14 +235,14 @@ immediately.
 
 Raspberry pi
 
-## Problems with pseye 4 microphone array 
+## Problems with pseye 4 microphone array
 
 Arecord hangs and no sound is recorded
 
 Found this blogpost :
 <https://www.cnx-software.com/2019/08/30/using-sony-ps3-eye-camera-as-an-inexpensive-microphone-array/>
 
-Didn’t found /etc/udev/rules.d/70-alsa-permanent.rules 
+Didn’t found /etc/udev/rules.d/70-alsa-permanent.rules
 
 But found /etc/udev/rules.d/99-com.rules
 
@@ -254,7 +256,7 @@ I2c gpio rpivid , maybe camera modules?
 
 This is output of alsa identified devices:
 
-pi@raspberrypi:\~/duncanStream $ arecord -l
+pi@raspberrypi:\~/duncanStream \$ arecord -l
 
 \*\*\*\* List of CAPTURE Hardware Devices \*\*\*\*
 
@@ -290,7 +292,7 @@ card CameraB409241
 
 }
 
-pcm.array\_gain {
+pcm.array_gain {
 
 type softvol
 
@@ -308,9 +310,9 @@ count 2
 
 }
 
-min\_dB -10.0
+min_dB -10.0
 
-max\_dB 5.0
+max_dB 5.0
 
 }
 
@@ -320,13 +322,13 @@ type plug
 
 slave {
 
-pcm "array\_gain"
+pcm "array_gain"
 
 channels 4
 
 }
 
-route\_policy sum
+route_policy sum
 
 }
 
@@ -392,7 +394,7 @@ type hw
 
 card CameraB409241
 
-format S16\_LE
+format S16_LE
 
 rate 16000
 
@@ -408,7 +410,7 @@ card 0
 
 }
 
-pcm.array\_gain {
+pcm.array_gain {
 
 type softvol
 
@@ -426,9 +428,9 @@ count 2
 
 }
 
-min\_dB -10.0
+min_dB -10.0
 
-max\_dB 5.0
+max_dB 5.0
 
 }
 
@@ -438,13 +440,13 @@ type plug
 
 slave {
 
-pcm "array\_gain"
+pcm "array_gain"
 
 channels 4
 
 }
 
-route\_policy sum
+route_policy sum
 
 }
 
@@ -508,14 +510,14 @@ Not sure but it appears that ALSA has problem anyway
 
 Pip install SpeechRecognition
 
-I tried to use speech\_recognition module with microphone but pyaudio
+I tried to use speech_recognition module with microphone but pyaudio
 has problem interfacing with alsa devices, even if they are working now
 on their own (from terminal sudo arecord -D plughw:1 -d 5 -c 4 -r 48000
--f S16\_LE t3pore.wav )
+-f S16_LE t3pore.wav )
 
 So I gave up finally and will attempt to run recording using
 subprocess.popen from python and opening the file using
-speech\_recognition.WavFile().
+speech_recognition.WavFile().
 
 This may reduce capabilities, constricting the time of the recording but
 may work.
@@ -524,11 +526,11 @@ may work.
 
 ![](./media/image4.png)
 
-Finally I discovered that speech\_recognition , or google tts API ,
+Finally I discovered that speech_recognition , or google tts API ,
 doesn’t handle 4 channels in current set-up. Therefore I recorded an
 audio file with
 
-sudo arecord -D plughw:1 -d 5 -c 2 -r 48000 -f S16\_LE v.wav
+sudo arecord -D plughw:1 -d 5 -c 2 -r 48000 -f S16_LE v.wav
 
 and modified listen.py program to accept file name as a parameter.
 
@@ -540,15 +542,15 @@ Prior to following I had to change ownership of the folder , because I
 created it as a root and each time I tried to create a file I had to
 sudo and python scripts failed due to lack of permissions.
 
-sudo chown -R $USER /duncanFolder
+sudo chown -R \$USER /duncanFolder
 
-\-R for recursive $USER for current user (can be pi in my case)
+\-R for recursive \$USER for current user (can be pi in my case)
 
 import subprocess
 
 persons = \["Human", "Bolek", "Maciek", "Ania"\]
 
-greetings = 
+greetings =
 
 \["hello.mp3", "bolek.mp3", "maciek.mp3", "ania.mp3"\]
 
@@ -556,29 +558,29 @@ LINUX = True
 
 def hello(id):
 
-    global greetings
+global greetings
 
-    print("hello" + persons\[id\])
+print("hello" + persons\[id\])
 
-    seconds = str(5)
+seconds = str(5)
 
-    tempfilename = "tmp.wav"
+tempfilename = "tmp.wav"
 
-    if LINUX:
+if LINUX:
 
-        \# subprocess.run(
+\# subprocess.run(
 
-        \#     \["play", greetings\[id\], "pitch", "500"\])
+\#     \["play", greetings\[id\], "pitch", "500"\])
 
-        subprocess.run(
+subprocess.run(
 
-            \["play", greetings\[id\], "pitch", "500"\])
+\["play", greetings\[id\], "pitch", "500"\])
 
-        subprocess.run(\["arecord", "-D", "plughw:1", "-d", seconds,
+subprocess.run(\["arecord", "-D", "plughw:1", "-d", seconds,
 
-                        "-c", "2", "-r", "48000", "-f", "S16\_LE", tempfilename\])
+"-c", "2", "-r", "48000", "-f", "S16_LE", tempfilename\])
 
-        \# sudo arecord  -D plughw:1 -d 5 -c 2 -r 48000 -f S16\_LE v.wav
+\# sudo arecord  -D plughw:1 -d 5 -c 2 -r 48000 -f S16_LE v.wav
 
 hello(1)
 
@@ -601,47 +603,47 @@ LINUX = True
 
 def hear():
 
-    print("listening...")
+print("listening...")
 
-    seconds = str(5)
+seconds = str(5)
 
-    tempfilename = "tmp.wav"
+tempfilename = "tmp.wav"
 
-    if not LINUX:
+if not LINUX:
 
-        input("write something")
+input("write something")
 
-    subprocess.run(\["arecord", "-D", "plughw:1", "-d", seconds,
+subprocess.run(\["arecord", "-D", "plughw:1", "-d", seconds,
 
-                    "-c", "2", "-r", "48000", "-f", "S16\_LE", tempfilename\])
+"-c", "2", "-r", "48000", "-f", "S16_LE", tempfilename\])
 
-    print("recognizing...")
+print("recognizing...")
 
-    subprocess.run(\["python3", "listen.py", "-f", tempfilename\])
+subprocess.run(\["python3", "listen.py", "-f", tempfilename\])
 
 def hello(id):
 
-    global greetings
+global greetings
 
-    print("hello" + persons\[id\])
+print("hello" + persons\[id\])
 
-    seconds = str(5)
+seconds = str(5)
 
-    tempfilename = "tmp.wav"
+tempfilename = "tmp.wav"
 
-    if LINUX:
+if LINUX:
 
-        \# subprocess.run(
+\# subprocess.run(
 
-        \#     \["play", greetings\[id\], "pitch", "500"\])
+\#     \["play", greetings\[id\], "pitch", "500"\])
 
-        subprocess.run(
+subprocess.run(
 
-            \["play", greetings\[id\], "vol", "0.25", "pitch", "500"\])
+\["play", greetings\[id\], "vol", "0.25", "pitch", "500"\])
 
-        \# sudo arecord  -D plughw:1 -d 5 -c 2 -r 48000 -f S16\_LE v.wav
+\# sudo arecord  -D plughw:1 -d 5 -c 2 -r 48000 -f S16_LE v.wav
 
-    hear()
+hear()
 
 hello(1)
 
@@ -649,57 +651,57 @@ LISTEN.PY :
 
 \# Requires PyAudio and PySpeech.
 
-import speech\_recognition as sr
+import speech_recognition as sr
 
 import argparse
 
 if \_\_name\_\_ == '\_\_main\_\_':
 
-    \# construct the argument parser and parse command line arguments
+\# construct the argument parser and parse command line arguments
 
-    ap = argparse.ArgumentParser()
+ap = argparse.ArgumentParser()
 
-    ap.add\_argument("-f", "--file", type=str, required=True,
+ap.add_argument("-f", "--file", type=str, required=True,
 
-                    help="file to recognize ")
+help="file to recognize ")
 
-    args = vars(ap.parse\_args())
+args = vars(ap.parse_args())
 
-    print(args)
+print(args)
 
-    \# Record Audio
+\# Record Audio
 
-    r = sr.Recognizer()
+r = sr.Recognizer()
 
-    with sr.WavFile(args\['file'\]) as source:
+with sr.WavFile(args\['file'\]) as source:
 
-        print("Say something\!")
+print("Say something\!")
 
-        audio = r.record(source)
+audio = r.record(source)
 
-    \# Speech recognition using Google Speech Recognition
+\# Speech recognition using Google Speech Recognition
 
-    try:
+try:
 
-        \# for testing purposes, we're just using the default API key
+\# for testing purposes, we're just using the default API key
 
-        \# to use another API key, use \`r.recognize\_google(audio, key="GOOGLE\_SPEECH\_RECOGNITION\_API\_KEY")\`
+\# to use another API key, use \`r.recognize_google(audio, key="GOOGLE_SPEECH_RECOGNITION_API_KEY")\`
 
-        \# instead of \`r.recognize\_google(audio)\`
+\# instead of \`r.recognize_google(audio)\`
 
-        print("You said: " + r.recognize\_google(audio))
+print("You said: " + r.recognize_google(audio))
 
-    except sr.UnknownValueError:
+except sr.UnknownValueError:
 
-        print("Google Speech Recognition could not understand audio")
+print("Google Speech Recognition could not understand audio")
 
-    except sr.RequestError as e:
+except sr.RequestError as e:
 
-        print(
+print(
 
-            "Could not request results from Google Speech Recognition service; {0}".format(e))
+"Could not request results from Google Speech Recognition service; {0}".format(e))
 
-pi@raspberrypi:\~/duncanStream $ python3 test.py
+pi@raspberrypi:\~/duncanStream \$ python3 test.py
 
 helloBolek
 
@@ -758,8 +760,8 @@ apt-get install libttspico0
 or without adding the repo:  
 wget <http://ftp.us.debian.org/debian/pool/non-free/s/svox/libttspico0_1.0+git20130326-9_armhf.deb>  
 wget <http://ftp.us.debian.org/debian/pool/non-free/s/svox/libttspico-utils_1.0+git20130326-9_armhf.deb>  
-apt-get install -f ./libttspico0\_1.0+git20130326-9\_armhf.deb
-./libttspico-utils\_1.0+git20130326-9\_armhf.deb
+apt-get install -f ./libttspico0_1.0+git20130326-9_armhf.deb
+./libttspico-utils_1.0+git20130326-9_armhf.deb
 
 worked and now I have nice sounding fallback if googtts will start
 playing up
@@ -788,7 +790,7 @@ I forked and modified the code so it will use polish language as well,
 and to have some base to start from
 
 I reached to the point where I have to make computer recognize my voice.
-But’ should I rely on Google STT from Speech\_Recognition?
+But’ should I rely on Google STT from Speech_Recognition?
 
 There is issue : if set to pl-PL it does not produce translated output.
 
@@ -803,7 +805,7 @@ pip install pyttsx3
 
 I am interested in Mozilla DeepSpeech project and feel like developing
 it in parallel. It may yield better results, and will not require
-network, since it is local . Current Speech\_recognition uses google API
+network, since it is local . Current Speech_recognition uses google API
 key reverse-engneered from chrome so it is prone to fail in the future
 if Google will revoke it.
 
@@ -864,15 +866,15 @@ what they are doing and doing it since looong time)
 
 I downloaded the py37 win amd64 version (whl file for pip)
 
-pip install --user /PROJECT/deepspeech-0.7.0a3-cp37-cp37m-win\_amd64.whl
+pip install --user /PROJECT/deepspeech-0.7.0a3-cp37-cp37m-win_amd64.whl
 
 I found identical problem on discourse – unsolved , and proceeded with
 adding my comment
 
-pi@raspberrypi:\~/animal-guesser/deepspeech-0.6.1-models $ deepspeech
---model output\_graph.pbmm --audio tds.wav
+pi@raspberrypi:\~/animal-guesser/deepspeech-0.6.1-models \$ deepspeech
+--model output_graph.pbmm --audio tds.wav
 
-Loading model from file output\_graph.pbmm
+Loading model from file output_graph.pbmm
 
 TensorFlow: v1.14.0-21-ge77504a
 
@@ -880,7 +882,7 @@ DeepSpeech: v0.6.1-0-g3df20fe
 
 ERROR: Model provided has model identifier '='+;', should be 'TFL3'
 
-Error at reading model file output\_graph.pbmm
+Error at reading model file output_graph.pbmm
 
 Traceback (most recent call last):
 
@@ -891,7 +893,7 @@ sys.exit(main())
 File "/home/pi/.local/lib/python3.7/site-packages/deepspeech/client.py",
 line 113, in main
 
-ds = Model(args.model, args.beam\_width)
+ds = Model(args.model, args.beam_width)
 
 File
 "/home/pi/.local/lib/python3.7/site-packages/deepspeech/\_\_init\_\_.py",
@@ -914,11 +916,11 @@ the fact that binaries are pre-configured to use TensorFlow Lite
 runtime. Since the error
 
 As documented, RPi3/4 binaries are using the TensorFlow Lite runtime, so
-you need to pass output\_graph.tflite and not output\_graph.pbmm.
+you need to pass output_graph.tflite and not output_graph.pbmm.
 
-deepspeech --model output\_graph.tflite --audio myaudio.wav
+deepspeech --model output_graph.tflite --audio myaudio.wav
 
-Loading model from file output\_graph.tflite
+Loading model from file output_graph.tflite
 
 TensorFlow: v1.14.0-21-ge77504a
 
@@ -956,7 +958,7 @@ We will go with rec and deepspeech
 
 rec is part of sox (sudo apt install sox)
 
-$ rec --channels 1 --rate 16k tmp2.wav silence 1 0.01 2% 1 3.0 2%
+\$ rec --channels 1 --rate 16k tmp2.wav silence 1 0.01 2% 1 3.0 2%
 
 Mono 16000 sample rate saved to tmp2.wav file with silence effect –
 truncates silence (behaves as automatic speech detection, saving only
@@ -964,7 +966,7 @@ needed portion of file)
 
 Then we will infer the content with:
 
-deepspeech --model output\_graph.tflite --lm lm.binary --trie trie
+deepspeech --model output_graph.tflite --lm lm.binary --trie trie
 --audio tmp2.wav
 
 effect is disappointing , the script needs the time to record, then
@@ -1043,7 +1045,7 @@ Arduino may treat 65 and 335 as zero and maximum respectively
 
 You can calculate it on Arduino
 
-# Web Interface 
+# Web Interface
 
 ## Trust your guts (moustache problem)
 
